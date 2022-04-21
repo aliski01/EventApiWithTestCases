@@ -32,23 +32,7 @@ public class EventApiStarterApplication {
 
 		return new RestTemplate(clientHttpRequestFactory);
 	}
-	@Bean
-	public ResponseEntity<String> getResponseEntityForTimeOut()
-	{
-		return new ResponseEntity<>("GATEWAY_TIMEOUT",HttpStatus.GATEWAY_TIMEOUT);
-	}
-	@Bean
-	public ResponseEntity<String> getBadRequest()
-	{
-		return new ResponseEntity<>("Event ID should be a numaric value. HTTP Error status Code: 400",
-				HttpStatus.BAD_REQUEST);
-	}
-	@Bean
-	public ResponseEntity<String> getNotFound()
-	{
-		return new ResponseEntity<>("Event ID is not found. HTTP Error status Code: 404", HttpStatus.NOT_FOUND);
-	}
-
+	
 	@Bean
 	public HttpEntity<String> getEntity() {
 		HttpHeaders headers = new HttpHeaders();

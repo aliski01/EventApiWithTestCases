@@ -17,28 +17,22 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import com.dcsg.eventApi.errorHandler.APIException;
 import com.dcsg.eventApi.service.EventApiService;
 import com.dcsg.eventApi.validator.EventValidation;
 
 
 @ExtendWith(MockitoExtension.class)
 class EventApiControllerTest {
-	
-	Logger logger = LoggerFactory.getLogger(EventApiControllerTest.class);
+	Logger logger = LoggerFactory.getLogger(EventApiController.class);
+
 	@Mock
 	RestTemplate restTemplate;
 
 	@Mock
 	HttpEntity<String> httpEntity;
-	@Mock
-	ResponseEntity<String> getTimeOut;
-	@Mock
-	ResponseEntity<String> badRequest;
-	@Mock
-	ResponseEntity<String> notFound;
 	@Mock
 	EventApiService service;
 	@Mock
@@ -70,45 +64,24 @@ class EventApiControllerTest {
 	@Test
 	void testGetEventsList_ForException() 
 	{
-		
+
 		String service1 = "SampleException1";
 
 		Mockito.when(service.getUriBuilderForAllEvents()).thenReturn(service1);
 
 		ResponseEntity<String> responseEntity = new ResponseEntity<String>("sampleBodyString", HttpStatus.OK);
 		logger.info(responseEntity.getBody());
-		
 		when(restTemplate.exchange(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpMethod.class),
 				ArgumentMatchers.<HttpEntity<?>>any(), ArgumentMatchers.<Class<String>>any()))
 		.thenThrow(RuntimeException.class);
 		//assertThrows(RuntimeException.class, ()-> {contr.getEventsList();});
-		
+
 		assertThrows(RuntimeException.class,() -> contr.getEventsList());
 
 	}
-	@Test
-	void testGetEventsList_ForTimeOutException() 
-	{
-		
-		String service1 = "SampleException1";
-
-		Mockito.when(service.getUriBuilderForAllEvents()).thenReturn(service1);
-
-		ResponseEntity<String> responseEntity = new ResponseEntity<String>("sampleBodyString", HttpStatus.OK);
-		logger.info(responseEntity.getBody());
-		when(restTemplate.exchange(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpMethod.class),
-				ArgumentMatchers.<HttpEntity<?>>any(), ArgumentMatchers.<Class<String>>any()))
-		.thenThrow(ResourceAccessException.class);
-		//assertThrows(RuntimeException.class, ()-> {contr.getEventsList();});
-		
-		ResponseEntity<String> eventList = contr.getEventsList();
-
-		assertNotNull(eventList);
-
-	}
 
 	@Test
-	void testGetEventForId_forValidEventId() 
+	void testGetEventForId() 
 	{
 		String service2 = "UriForEventId";
 		boolean valid = true;
@@ -126,16 +99,16 @@ class EventApiControllerTest {
 
 		assertNotNull(eventforId);
 	}
-	
+
 	@Test
 	void testGetEventForId_NotANumber() 
 	{
 		boolean valid = false;
 		Mockito.when(validate.validateEventId(ArgumentMatchers.anyString())).thenReturn(valid);
 
-		ResponseEntity<String> eventforId = contr.getEventForId("wqe12");
+		//ResponseEntity<String> eventforId = contr.getEventForId("12sa3");
 
-		assertNotNull(eventforId);
+		assertThrows(APIException.class, ()->contr.getEventForId("12sa3"));
 
 	}
 	@Test
@@ -147,35 +120,13 @@ class EventApiControllerTest {
 
 		Mockito.when(service.getUriBuilderForEventById(ArgumentMatchers.anyString())).thenReturn(service1);
 
-		ResponseEntity<String> responseEntity = new ResponseEntity<String>("sampleBodyString", HttpStatus.OK);
-		logger.info(responseEntity.getBody());
 		when(restTemplate.exchange(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpMethod.class),
 				ArgumentMatchers.<HttpEntity<?>>any(), ArgumentMatchers.<Class<String>>any()))
-		.thenThrow(HttpClientErrorException.class);
-		
-		ResponseEntity<String> eventforId = contr.getEventForId("123");
+		.thenThrow(HttpClientErrorException.NotFound.class);
+		//ResponseEntity<String> eventforId = contr.getEventForId("123");
 
-		assertNotNull(eventforId);
+		assertThrows(APIException.class, ()->contr.getEventForId("123"));
 
-	}
-	@Test
-	void testGetEventForId_ForTimeOutException() 
-	{
-		String service2 = "UriForEventId";
-		boolean valid = true;
-		Mockito.when(validate.validateEventId(ArgumentMatchers.anyString())).thenReturn(valid);
-
-		Mockito.when(service.getUriBuilderForEventById(ArgumentMatchers.anyString())).thenReturn(service2);
-
-		ResponseEntity<String> responseEntity = new ResponseEntity<String>("sampleBodyString", HttpStatus.OK);
-		logger.info(responseEntity.getBody());
-		when(restTemplate.exchange(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpMethod.class),
-				ArgumentMatchers.<HttpEntity<?>>any(), ArgumentMatchers.<Class<String>>any()))
-		.thenThrow(ResourceAccessException.class);
-
-		ResponseEntity<String> eventforId = contr.getEventForId("123");
-
-		assertNotNull(eventforId);
 	}
 
 	@Test
@@ -194,7 +145,7 @@ class EventApiControllerTest {
 
 		assertNotNull(eventSearch);
 	}
-	
+
 	@Test
 	void testGetEventsListBySearch_ForException() 
 	{
@@ -209,25 +160,6 @@ class EventApiControllerTest {
 				ArgumentMatchers.<HttpEntity<?>>any(), ArgumentMatchers.<Class<String>>any()))
 		.thenThrow(RuntimeException.class);
 		assertThrows(RuntimeException.class, ()-> {contr.getEventsListBySearch("NY");});
-
-	}
-	@Test
-	void testGetEventsListBySearch_ForTimeOutException() 
-	{
-
-		String service1 = "sampleException3";
-
-		Mockito.when(service.getUriBuilderSearch(ArgumentMatchers.anyString())).thenReturn(service1);
-
-		ResponseEntity<String> responseEntity = new ResponseEntity<String>("sampleBodyString3", HttpStatus.OK);
-		logger.info(responseEntity.getBody());
-		when(restTemplate.exchange(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpMethod.class),
-				ArgumentMatchers.<HttpEntity<?>>any(), ArgumentMatchers.<Class<String>>any()))
-		.thenThrow(ResourceAccessException.class);
-		//assertThrows(ResourceAccessException.class, ()-> {contr.getEventsListBySearch("NY");});
-		ResponseEntity<String> eventSearch = contr.getEventsListBySearch("swift");
-
-		assertNotNull(eventSearch);
 
 	}
 

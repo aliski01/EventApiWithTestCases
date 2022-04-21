@@ -10,12 +10,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import com.dcsg.eventApi.errorHandler.APIException;
 import com.dcsg.eventApi.service.EventApiService;
 import com.dcsg.eventApi.validator.EventValidation;
+
+
 
 
 @RestController
@@ -31,36 +32,32 @@ public class EventApiController {
 	EventApiService service;
 	@Autowired @Qualifier("getEntity")
 	HttpEntity<String> entity;
-	@Autowired @Qualifier("getResponseEntityForTimeOut")
-	ResponseEntity<String> getTimeOut;
-	@Autowired @Qualifier("getBadRequest")
-	ResponseEntity<String> badRequest;
-	@Autowired @Qualifier("getNotFound")
-	ResponseEntity<String> notFound;
 
+	public void testlog()
+	{
+		logger.info("This is sample logger text");
+	}
 	// Returning all events
 	@RequestMapping(value = "/template/events")
 	public ResponseEntity<String> getEventsList() {
+		testlog();
+
 		String eventUri = service.getUriBuilderForAllEvents();
+		//logger.info(eventUri);
 		logger.info(eventUri);
 
 		ResponseEntity<String> response = null;
 
+
 		try {
 			response = restTemplate.exchange(eventUri, HttpMethod.GET, entity, String.class);
-			// logger.info("response.getStatusCode() :: "+response.getStatusCode());
-		}
-		catch(ResourceAccessException re)
-		{
-			re.printStackTrace();
-			return getTimeOut;
-		}
-		catch (Exception e) {
+			logger.debug("response.getStatusCode() for get eventList :: "+response.getStatusCode());
+		} catch (Exception e) {
 			e.printStackTrace();
-			logger.debug("Exception occurred111 " + e.getMessage());
-			throw new RuntimeException();
-
+			logger.error(e.getMessage());
+			throw new APIException(e);
 		}
+
 
 		return response;
 	}
@@ -75,7 +72,7 @@ public class EventApiController {
 		if (validate.validateEventId(id)) {
 			eventUri = service.getUriBuilderForEventById(id);
 		} else {
-			return badRequest;
+			throw new APIException("BadRequest");
 		}
 
 		try {
@@ -83,21 +80,15 @@ public class EventApiController {
 			response = restTemplate.exchange(eventUri, HttpMethod.GET, entity, String.class);
 			long t2 = System.currentTimeMillis();
 			logger.info("response time: " + (t2 - t1));
-			//logger.debug("response.getStatusCode() :: "+response.getStatusCode());
+		} catch (Exception e) {				
+			e.printStackTrace();
+			throw new APIException(e);
+		}
 
 
-		}
-		catch(ResourceAccessException re)
-		{
-			re.printStackTrace();
-			return getTimeOut;
-		}
-		catch(HttpClientErrorException he)
-		{
-			logger.info("HttpClientErrorException caught!!");
-			he.printStackTrace();
-			return notFound;
-		}
+
+
+		// logger.info(eventUri);
 
 		return response;
 	}
@@ -110,20 +101,16 @@ public class EventApiController {
 		String eventUri = service.getUriBuilderSearch(keyword);
 
 		logger.info(eventUri);
+
 		try {
 			response = restTemplate.exchange(eventUri, HttpMethod.GET, entity, String.class);
 			logger.info("response.getStatusCode() :: " + response.getStatusCode());
-		}
-		catch(ResourceAccessException re)
-		{
-			re.printStackTrace();
-			return getTimeOut;
-		}
-		catch (Exception e) {
-			logger.error("exception:: "+e.getMessage());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new RuntimeException();
+			throw new APIException(e);
 		}
+
 		return response;
 
 	}
