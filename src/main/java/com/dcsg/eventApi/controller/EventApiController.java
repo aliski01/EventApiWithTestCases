@@ -33,15 +33,11 @@ public class EventApiController {
 	@Autowired @Qualifier("getEntity")
 	HttpEntity<String> entity;
 
-	public void testlog()
-	{
-		logger.info("This is sample logger text");
-	}
+	
 	// Returning all events
 	@RequestMapping(value = "/template/events")
 	public ResponseEntity<String> getEventsList() {
-		testlog();
-
+		
 		String eventUri = service.getUriBuilderForAllEvents();
 		//logger.info(eventUri);
 		logger.info(eventUri);
